@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LinkedInk — AI Ghostwriter for LinkedIn</title>
+  <meta name="description" content="Write LinkedIn posts, comments, connection requests and job applications in seconds. Powered by Claude AI."/>
+  <meta property="og:title" content="LinkedInk — AI Ghostwriter for LinkedIn"/>
+  <meta property="og:description" content="Stop staring at a blank text box. LinkedInk writes your LinkedIn content in seconds."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --ink: #0a0a0f;
+      --ink2: #111118;
+      --paper: #f5f2eb;
+      --gold: #c9a84c;
+      --gold-light: #e8d5a3;
+      --gold-dim: rgba(201,168,76,0.15);
+      --muted: #6b6760;
+      --border: rgba(201,168,76,0.2);
+      --white10: rgba(255,255,255,0.06);
+      --white20: rgba(255,255,255,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--paper);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 48px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 900;
+      color: var(--paper); letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-cta {
+      padding: 10px 24px;
+      background: var(--gold);
+      color: var(--ink);
+      border: none; border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .nav-cta:hover { background: #b8943c; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      overflow: hidden;
+    }
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    }
+    .grid-lines {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 780px; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      color: var(--gold-light);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(52px, 8vw, 96px);
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: clamp(17px, 2.5vw, 21px);
+      color: rgba(245,242,235,0.6);
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto 48px;
+      font-weight: 300;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; flex-wrap: wrap;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn-primary {
+      padding: 16px 36px;
+      background: var(--gold);
+      color: var(--ink);
+      border: none; border-radius: 4px;
+      font-family: 'Playfair Display', serif;
+      font-size: 17px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.25s;
+      letter-spacing: 0.3px;
+    }
+    .btn-primary:hover { background: #b8943c; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.3); }
+    .btn-ghost {
+      padding: 15px 28px;
+      background: transparent;
+      color: var(--paper);
+      border: 1px solid rgba(245,242,235,0.2);
+      border-radius: 4px;
+      font-size: 15px; font-weight: 400;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    .hero-note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(245,242,235,0.3);
+      letter-spacing: 0.5px;
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    /* ── SOCIAL PROOF ── */
+    .social-proof {
+      padding: 32px 48px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      gap: 48px; flex-wrap: wrap;
+    }
+    .proof-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: rgba(245,242,235,0.45);
+      letter-spacing: 0.3px;
+    }
+    .proof-icon { color: var(--gold); font-size: 16px; }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 120px 48px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 64px;
+      max-width: 500px;
+    }
+    .section-title em { color: var(--gold); font-style: italic; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2px;
+      border: 1px solid var(--border);
+    }
+    .feature-card {
+      padding: 40px 36px;
+      background: var(--ink2);
+      border: 1px solid var(--border);
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+      transform-origin: left;
+    }
+    .feature-card:hover::before { transform: scaleX(1); }
+    .feature-card:hover { background: rgba(201,168,76,0.04); }
+
+    .feature-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px; font-weight: 900;
+      color: rgba(201,168,76,0.12);
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    .feature-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--paper);
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: rgba(245,242,235,0.5);
+      line-height: 1.7;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how {
+      padding: 120px 48px;
+      background: var(--ink2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .how-inner { max-width: 1100px; margin: 0 auto; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      margin-top: 64px;
+      position: relative;
+    }
+    .step {
+      padding: 0 40px 0 0;
+      position: relative;
+    }
+    .step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 64px; font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+    .step-title {
+      font-size: 18px; font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .step-desc {
+      font-size: 14px;
+      color: rgba(245,242,235,0.45);
+      line-height: 1.7;
+    }
+    .step-line {
+      position: absolute;
+      top: 32px; right: 0;
+      width: 1px; height: 60px;
+      background: var(--border);
+    }
+    .step:last-child .step-line { display: none; }
+
+    /* ── PRICING ── */
+    .pricing {
+      padding: 120px 48px;
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .price-card {
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 56px 48px;
+      margin-top: 56px;
+      position: relative;
+      background: var(--ink2);
+    }
+    .price-badge {
+      position: absolute;
+      top: -14px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--ink);
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .price-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 80px; font-weight: 900;
+      color: var(--paper);
+      line-height: 1;
+      letter-spacing: -3px;
+    }
+    .price-amount sup {
+      font-size: 36px;
+      vertical-align: super;
+      letter-spacing: 0;
+    }
+    .price-label {
+      font-size: 14px;
+      color: rgba(245,242,235,0.4);
+      margin-top: 8px;
+      margin-bottom: 36px;
+    }
+    .price-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 40px;
+    }
+    .price-features li {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      font-size: 15px;
+      color: rgba(245,242,235,0.75);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .price-features li::before {
+      content: '✦';
+      color: var(--gold);
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .price-features li:last-child { border-bottom: none; }
+
+    .btn-buy {
+      display: block; width: 100%;
+      padding: 18px;
+      background: var(--gold);
+      color: var(--ink);
+      border: none; border-radius: 4px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.25s;
+      letter-spacing: 0.3px;
+    }
+    .btn-buy:hover { background: #b8943c; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.3); }
+
+    .price-note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: rgba(245,242,235,0.25);
+    }
+
+    /* ── FAQ ── */
+    .faq {
+      padding: 120px 48px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+    }
+    .faq-q {
+      font-family: 'Playfair Display', serif;
+      font-size: 19px; font-weight: 700;
+      cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 20px;
+    }
+    .faq-toggle {
+      color: var(--gold);
+      font-size: 22px;
+      flex-shrink: 0;
+      transition: transform 0.3s;
+      font-family: monospace;
+    }
+    .faq-a {
+      font-size: 15px;
+      color: rgba(245,242,235,0.5);
+      line-height: 1.75;
+      margin-top: 16px;
+      display: none;
+    }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-toggle { transform: rotate(45deg); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 48px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 900;
+      color: var(--paper);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-copy {
+      font-size: 13px;
+      color: rgba(245,242,235,0.25);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1; transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .features, .pricing, .faq, .how { padding: 80px 24px; }
+      .social-proof { padding: 24px; gap: 24px; }
+      footer { padding: 32px 24px; }
+      .step { padding: 0 0 40px; }
+      .step-line { display: none; }
+      .price-card { padding: 48px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Linked<span>Ink</span></div>
+    <a href="https://punditbeats.gumroad.com/l/vnksxq" target="_blank" class="nav-cta">Get it — $9</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="grid-lines"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <div class="badge-dot"></div>
+        Powered by Claude AI
+      </div>
+      <h1>Stop Writing.<br>Start <em>Publishing.</em></h1>
+      <p class="hero-sub">LinkedInk writes your LinkedIn posts, comments, connection requests, and job applications in seconds — so you can focus on what actually matters.</p>
+      <div class="hero-actions">
+        <a href="https://punditbeats.gumroad.com/l/vnksxq" target="_blank" class="btn-primary">Get LinkedInk — $9 ✦</a>
+        <a href="#features" class="btn-ghost">See how it works</a>
+      </div>
+      <p class="hero-note">One-time payment &nbsp;·&nbsp; Instant download &nbsp;·&nbsp; Works in 2 minutes</p>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <div class="social-proof">
+    <div class="proof-item"><span class="proof-icon">✦</span> Chrome Extension</div>
+    <div class="proof-item"><span class="proof-icon">✦</span> Claude AI Powered</div>
+    <div class="proof-item"><span class="proof-icon">✦</span> One-time $9 — No Subscription</div>
+    <div class="proof-item"><span class="proof-icon">✦</span> Instant Setup</div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="section-label">What it does</div>
+    <h2 class="section-title reveal">Four tools.<br><em>One extension.</em></h2>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-num">01</div>
+        <div class="feature-title">Post Generator</div>
+        <div class="feature-desc">Describe what you want to say. Choose your tone — professional, storytelling, bold, or casual. Get a ready-to-publish post in seconds.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-num">02</div>
+        <div class="feature-title">Smart Comments</div>
+        <div class="feature-desc">Paste any LinkedIn post. LinkedInk writes a thoughtful, value-adding comment that doesn't sound like "Great post!" spam.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-num">03</div>
+        <div class="feature-title">Connection Requests</div>
+        <div class="feature-desc">Personalized outreach messages under LinkedIn's 300 character limit. Specific, warm, and impossible to ignore.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-num">04</div>
+        <div class="feature-title">Job Applications</div>
+        <div class="feature-desc">Tailored application messages that match your strengths to the role. Sound like a top candidate, not a desperate one.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="how-inner">
+      <div class="section-label">Setup</div>
+      <h2 class="section-title reveal">Up and running<br>in <em>2 minutes.</em></h2>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <div class="step-title">Download & Install</div>
+          <div class="step-desc">Unzip the extension and load it into Chrome via chrome://extensions/ with one click.</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">2</div>
+          <div class="step-title">Get your API key</div>
+          <div class="step-desc">Create a free Anthropic account at console.anthropic.com. You get $5 in free credits — enough for thousands of posts.</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">3</div>
+          <div class="step-title">Paste & Activate</div>
+          <div class="step-desc">Paste your API key into LinkedInk and you're done. No accounts, no subscriptions, no nonsense.</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">4</div>
+          <div class="step-title">Write everything</div>
+          <div class="step-desc">Click the LinkedInk icon anytime you're on LinkedIn and let it write for you. Copy, paste, publish.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title reveal" style="margin: 0 auto 0; text-align:center;">Simple.<br><em>Honest.</em> One price.</h2>
+    <div class="price-card reveal">
+      <div class="price-badge">One-time payment — Yours forever</div>
+      <div class="price-amount"><sup>$</sup>9</div>
+      <div class="price-label">Pay once. Use forever. No subscription ever.</div>
+      <ul class="price-features">
+        <li>LinkedIn Post Generator with tone control</li>
+        <li>Smart Comment Writer</li>
+        <li>Personalized Connection Messages</li>
+        <li>Job Application Messages</li>
+        <li>Setup guide included (PDF)</li>
+        <li>Works with your own Anthropic key (~$0.002/generation)</li>
+        <li>All future updates free</li>
+      </ul>
+      <a href="https://punditbeats.gumroad.com/l/vnksxq" target="_blank" class="btn-buy">Get LinkedInk ✦</a>
+      <p class="price-note">Secure checkout via Gumroad &nbsp;·&nbsp; Instant download</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title reveal">Questions?<br><em>Answered.</em></h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Do I need coding skills to use this?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Not at all. Installation takes 2 minutes with simple click-by-click instructions included. If you can install a Chrome extension, you can use LinkedInk.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What is an Anthropic API key and do I need to pay for it?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">An API key lets LinkedInk access Claude AI. You create a free account at console.anthropic.com — Anthropic gives you $5 in free credits when you sign up, which equals thousands of posts. After that, it costs around $0.001–0.002 per generation — fractions of a penny.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Is my API key safe?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Yes. Your API key is stored locally on your own device only. It's never sent to any third-party server. Your prompts go directly from your browser to Anthropic's secure API.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Will the content sound robotic or AI-generated?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">LinkedInk uses Claude — one of the most human-sounding AI models available. The prompts are carefully engineered to avoid clichés like "Excited to announce" and "I'm humbled." You always review before posting, and you can regenerate as many times as you want.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What if it doesn't work for me?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">If you experience a technical issue that can't be resolved, contact me within 7 days for a full refund. No questions asked.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Does it work on Windows and Mac?
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Yes — it works on any computer that runs Google Chrome, including Windows, Mac, and Linux.</div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section style="padding: 80px 48px; text-align: center; border-top: 1px solid var(--border); background: var(--ink2);">
+    <p style="font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); font-weight:500; margin-bottom:20px;">Ready?</p>
+    <h2 style="font-family:'Playfair Display',serif; font-size:clamp(36px,6vw,64px); font-weight:900; letter-spacing:-1.5px; margin-bottom:32px; line-height:1.1;" class="reveal">
+      Your next LinkedIn post<br>is <em style="color:var(--gold);font-style:italic;">waiting.</em>
+    </h2>
+    <a href="https://punditbeats.gumroad.com/l/vnksxq" target="_blank" class="btn-primary" style="font-size:18px; padding:18px 48px;">Get LinkedInk — $9 ✦</a>
+    <p style="margin-top:16px; font-size:12px; color:rgba(245,242,235,0.25);">One-time payment &nbsp;·&nbsp; Instant download &nbsp;·&nbsp; 7-day refund guarantee</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Linked<span>Ink</span></div>
+    <div class="footer-copy">© 2026 LinkedInk. Built with ✦ and Claude AI.</div>
+  </footer>
+
+  <script>
+    function toggleFaq(el) {
+      el.parentElement.classList.toggle('open');
+    }
+
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(r => observer.observe(r));
+  </script>
+
+</body>
+</html>
